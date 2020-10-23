@@ -53,36 +53,61 @@
         }
 
         function getDashboard() {
-            const token = localStorage.getItem('jwt');
-            axios.get('/api/dashboard', {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            }).then(res => {
-                if (res && res.data && res.data.success) {
-                    history.pushState(token, null, '/api/dashboard')
-                    document.querySelector('h1.row').innerHTML = 'Dashboard'
-                    document.querySelector('main').innerHTML = res.data.myContent;
-                }
-            });
+            if (tokenExpire()) {
+                const token = localStorage.getItem('jwt');
+                axios.get('/api/dashboard', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                }).then(res => {
+                    if (res && res.data && res.data.success) {
+                        history.pushState(token, null, '/api/dashboard')
+                        document.querySelector('h1.row').innerHTML = 'Dashboard'
+                        document.querySelector('main').innerHTML = res.data.myContent;
+                    }
+                });
+            }
         }
 
         function getSettings() {
-            const token = localStorage.getItem('jwt');
-            axios.get('/api/settings', {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
-            }).then(res => {
-                if (res && res.data && res.data.success) {
-                    history.pushState(token, null, '/api/settings')
-                    document.querySelector('h1.row').innerHTML = 'Settings'
-                    document.querySelector('main').innerHTML = res.data.myContent;
-                }
-            });
+            if (tokenExpire()) { 
+                const token = localStorage.getItem('jwt');
+                axios.get('/api/settings', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                }).then(res => {
+                    if (res && res.data && res.data.success) {
+                        history.pushState(token, null, '/api/settings')
+                        document.querySelector('h1.row').innerHTML = 'Settings'
+                        document.querySelector('main').innerHTML = res.data.myContent;
+                    }
+                });
+            }
         }
 
-        
+        const parseJwt = (token) => {
+            return JSON.parse(atob(token.split('.')[1]));
+        }
+
+        function tokenExpire() {
+            const token = localStorage.getItem('jwt');
+
+            if (token) {
+                const decode = parseJwt(token);
+                if(Date.now() <= decode.exp * 1000) {
+                    return true;
+                }
+                else {
+                    localStorage.removeItem('jwt');
+                    window.location.href = "/";
+                }
+            }
+        }
+
+        setTimeout(() => {
+            tokenExpire()
+        }, 180000);
 
         /*function onLoad() {
             const token = localStorage.getItem('jwt');
